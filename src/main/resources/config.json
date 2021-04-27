@@ -1,0 +1,18 @@
+{
+  "token": "",
+  "prefix": "",
+
+  "activity": {
+    "name": "",
+    "type": ""
+  },
+
+  "channels": {
+    "time": 0
+  },
+
+  "roles": {
+    "onJoin": 0,
+    "staff": 0
+  }
+}
