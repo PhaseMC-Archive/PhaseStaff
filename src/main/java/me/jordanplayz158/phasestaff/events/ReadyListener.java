@@ -10,6 +10,7 @@ import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import org.jetbrains.annotations.NotNull;
 import org.quartz.*;
 import org.quartz.impl.StdSchedulerFactory;
 
@@ -24,50 +25,53 @@ public class ReadyListener extends ListenerAdapter {
     private static Message message;
 
     @Override
-    public void onReady(ReadyEvent event) {
+    public void onReady(@NotNull ReadyEvent event) {
         Config config = PhaseStaff.getInstance().getConfig();
-        Time time = PhaseStaff.getInstance().getTime();
 
-        AtomicReference<Guild> guildAtom = new AtomicReference<>();
-        AtomicReference<TextChannel> channel = new AtomicReference<>();
+        if(config.getChannelTime() != 0) {
+            Time time = PhaseStaff.getInstance().getTime();
 
-        PhaseStaff.getInstance().getJDA().getGuilds().forEach(g -> {
+            AtomicReference<Guild> guildAtom = new AtomicReference<>();
+            AtomicReference<TextChannel> channel = new AtomicReference<>();
+
+            PhaseStaff.getInstance().getJDA().getGuilds().forEach(g -> {
+                try {
+                    channel.set(g.getTextChannelById(config.getChannelTime()));
+                    guildAtom.set(channel.get().getGuild());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+
+            guild = guildAtom.get();
+
+            if (time.getMessageId() == 0) {
+                time.setMessageId(channel.get().sendMessage(new EmbedBuilder()
+                        .setTitle("Staff Clocks")
+                        .build()
+                ).complete().getIdLong());
+
+                try {
+                    time.writeJson();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            message = channel.get().retrieveMessageById(time.getMessageId()).complete();
+
             try {
-                channel.set(g.getTextChannelById(config.getChannelTime()));
-                guildAtom.set(channel.get().getGuild());
-            } catch (Exception e) {
+                scheduler = sf.getScheduler();
+
+                scheduler.scheduleJob(JobBuilder.newJob(TimeZoneMessageJob.class).build(),
+                        TriggerBuilder.newTrigger()
+                                .withSchedule(SimpleScheduleBuilder.repeatMinutelyForever())
+                                .build());
+
+                scheduler.start();
+            } catch (SchedulerException e) {
                 e.printStackTrace();
             }
-        });
-
-        guild = guildAtom.get();
-
-        if (time.getMessageId() == 0) {
-            time.setMessageId(channel.get().sendMessage(new EmbedBuilder()
-                    .setTitle("Staff Clocks")
-                    .build()
-            ).complete().getIdLong());
-
-            try {
-                time.writeJson();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-        message = channel.get().retrieveMessageById(time.getMessageId()).complete();
-
-        try {
-            scheduler = sf.getScheduler();
-
-            scheduler.scheduleJob(JobBuilder.newJob(TimeZoneMessageJob.class).build(),
-                    TriggerBuilder.newTrigger()
-                            .withSchedule(SimpleScheduleBuilder.repeatMinutelyForever())
-                            .build());
-
-            scheduler.start();
-        } catch (SchedulerException e) {
-            e.printStackTrace();
         }
     }
 
