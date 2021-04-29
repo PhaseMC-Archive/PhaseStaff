@@ -1,6 +1,6 @@
 .idea
 src/test
 target
-/config.json
+/config.json*
 *.iml
 /data
