@@ -25,7 +25,6 @@ public class UserInfoCommand extends ArgumentCommand {
                     .setTitle(MessageUtils.nameAndTag(member.getUser()))
                     .addField("Join Time", String.valueOf(member.getTimeJoined()), true)
                     .setColor(Color.GREEN)
-
                     .build()
             ).queue();
         } catch (NullPointerException e) {

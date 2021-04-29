@@ -24,7 +24,7 @@ public class CommandHandler {
         Command command = null;
 
         for(Command c : PhaseStaff.getInstance().getCommands()) {
-            if (c.getName().equals(commandName) || c.getAliases().contains(commandName)) {
+            if (c.getName().equals(commandName) || (c.getAliases() != null && c.getAliases().contains(commandName))) {
                 command = c;
                 break;
             }
@@ -38,7 +38,7 @@ public class CommandHandler {
         MessageChannel channel = event.getChannel();
 
         if ((command.getPermission() != null && !Objects.requireNonNull(event.getMember()).hasPermission(command.getPermission())) || (command.getRole() != null && !Objects.requireNonNull(event.getMember()).getRoles().contains(command.getRole()))) {
-            channel.sendMessage(PhaseStaff.getInstance().getTemplate(event.getAuthor()).setColor(Color.RED).setTitle("Access Denied").setDescription("You do not have access to that command!").build()).queue();
+            channel.sendMessage(PhaseStaff.getTemplate(event.getAuthor()).setColor(Color.RED).setTitle("Access Denied").setDescription("You do not have access to that command!").build()).queue();
             return;
         }
 
@@ -56,7 +56,7 @@ public class CommandHandler {
                 }
             }
 
-            channel.sendMessage(PhaseStaff.getInstance().getTemplate(event.getAuthor()).setColor(Color.YELLOW)
+            channel.sendMessage(PhaseStaff.getTemplate(event.getAuthor()).setColor(Color.YELLOW)
                     .setTitle(command.getName())
                     .setDescription(command.getDescription() + aliases)
                     .addField("Syntax", PhaseStaff.getInstance().getConfig().getPrefix() + command.getSyntax(), true).build()).queue();
@@ -69,7 +69,7 @@ public class CommandHandler {
 
             if (guild.isMember(mentionedUser)) {
                 if (!hierarchyCheck(guild.getRoles(), Objects.requireNonNull(event.getMember()).getRoles(), Objects.requireNonNull(guild.getMember(mentionedUser)).getRoles(), channel)) {
-                    channel.sendMessage(PhaseStaff.getInstance().getTemplate(event.getAuthor()).setColor(Color.RED).setTitle("Hierarchy Check").setDescription("You can't execute this command as you are lower or the same on the hierarchy than the person you are using this on.").build()).queue();
+                    channel.sendMessage(PhaseStaff.getTemplate(event.getAuthor()).setColor(Color.RED).setTitle("Hierarchy Check").setDescription("You can't execute this command as you are lower or the same on the hierarchy than the person you are using this on.").build()).queue();
                     return;
                 }
             }
