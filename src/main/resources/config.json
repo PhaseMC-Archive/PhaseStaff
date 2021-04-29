@@ -1,7 +1,7 @@
 {
+  "logLevel": "INFO",
   "token": "",
   "prefix": "",
-  "vcroleid": 0,
 
   "activity": {
     "name": "",
@@ -14,6 +14,7 @@
 
   "roles": {
     "onJoin": 0,
-    "staff": 0
+    "staff": 0,
+    "vc": 0
   }
 }
