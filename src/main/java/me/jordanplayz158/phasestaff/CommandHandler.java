@@ -12,10 +12,14 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.utils.MarkdownUtil;
 
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
 public class CommandHandler {
+    private static List<Command> commands = new ArrayList<>();
+
     public static void handler(MessageReceivedEvent event) {
         // Removes the prefix (substring) then splits the message into arguments by spaces
         String[] args = event.getMessage().getContentRaw().substring(PhaseStaff.getInstance().getConfig().getPrefix().length()).split("\\s+");
@@ -23,7 +27,7 @@ public class CommandHandler {
 
         Command command = null;
 
-        for(Command c : PhaseStaff.getInstance().getCommands()) {
+        for(Command c : commands) {
             if (c.getName().equals(commandName) || (c.getAliases() != null && c.getAliases().contains(commandName))) {
                 command = c;
                 break;
@@ -95,5 +99,13 @@ public class CommandHandler {
         }
 
         return guildRoles.indexOf(memberRoles.get(0)) < guildRoles.indexOf(mentionRoles.get(0));
+    }
+
+    public static void addCommands(Command... commands) {
+        CommandHandler.commands.addAll(Arrays.asList(commands));
+    }
+
+    public static void removeCommands(Command... commands) {
+        CommandHandler.commands.removeAll(Arrays.asList(commands));
     }
 }
