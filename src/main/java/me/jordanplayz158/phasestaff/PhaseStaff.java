@@ -5,6 +5,7 @@ import me.jordanplayz158.phasestaff.commands.TimeZoneCommand;
 import me.jordanplayz158.phasestaff.commands.UserInfoCommand;
 import me.jordanplayz158.phasestaff.events.CommandsListener;
 import me.jordanplayz158.phasestaff.events.MemberJoinListener;
+import me.jordanplayz158.phasestaff.events.MemberVcListener;
 import me.jordanplayz158.phasestaff.events.ReadyListener;
 import me.jordanplayz158.phasestaff.json.Config;
 import me.jordanplayz158.phasestaff.json.Time;
@@ -76,9 +77,13 @@ public class PhaseStaff {
             }
 
             jdaBuilder.enableIntents(GatewayIntent.GUILD_MEMBERS);
+
         }
 
         jdaBuilder.addEventListeners(new ReadyListener());
+        if(instance.config.getVcRoleId() != 0) {
+            jdaBuilder.addEventListeners(new MemberVcListener());
+        }
 
         instance.jda = jdaBuilder
                 .setActivity(Activity.of(instance.config.getActivityType(), instance.config.getActivityName()))
@@ -110,7 +115,6 @@ public class PhaseStaff {
             }
 
             System.out.print("Enter Command: ");
-            line = br.readLine();
         }
 
         instance.jda.shutdown();
@@ -130,9 +134,7 @@ public class PhaseStaff {
         return logger;
     }
 
-    public Time getTime() {
-        return time;
-    }
+    public Time getTime() { return time; }
 
     public JDA getJDA() {
         return jda;

@@ -29,11 +29,12 @@ public class Config extends Template {
     private JsonObject getChannels() {
         return json.getAsJsonObject("channels");
     }
+    public long getVcRoleId() { return json.get("vcroleid").getAsLong();
+    }
 
     public long getChannelTime() {
         return getChannels().get("time").getAsLong();
     }
-
     private JsonObject getRoles() {
         return json.getAsJsonObject("roles");
     }
@@ -45,4 +46,5 @@ public class Config extends Template {
     public long getRoleStaff() {
         return getRoles().get("staff").getAsLong();
     }
+
 }
