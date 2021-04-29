@@ -1,0 +1,6 @@
+.idea
+src/test
+target
+/config.json
+*.iml
+/data
