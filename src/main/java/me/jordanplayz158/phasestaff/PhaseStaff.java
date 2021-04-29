@@ -19,6 +19,9 @@ import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.ChunkingFilter;
+import net.dv8tion.jda.api.utils.MemberCachePolicy;
+import net.dv8tion.jda.api.utils.cache.CacheFlag;
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import javax.security.auth.login.LoginException;
@@ -34,33 +37,34 @@ import java.util.Objects;
 public class PhaseStaff {
     private static final PhaseStaff instance = new PhaseStaff();
     private Config config;
-    private final Logger logger = Initiate.log();
+    public static Logger logger;
     private Time time;
     private JDA jda;
 
-    private List<Command> commands = new ArrayList<>();
-
     public static void main(String[] args) throws LoginException, IOException {
-        //Copy config
+        // Copy config and loads it into memory
         instance.config = new Config();
         FileUtils.copyFile(Config.getFile());
         instance.config.loadJson();
 
+        logger = Initiate.log(Level.toLevel(instance.config.getLogLevel()));
+
         final String token = instance.config.getJson().get("token").getAsString();
-        // Checks if the Token is 1 character or less and if so, tell the person they need to provide a token
+        // Checks if token is invalid, informs the user they need to provide a token and exits
         if(token.length() <= 1) {
-            instance.logger.fatal("You have to provide a token in your config file!");
+            logger.fatal("You have to provide a token in your config file!");
             System.exit(1);
         }
 
-        // Token and activity is read from and set in the config.json
         JDABuilder jdaBuilder = JDABuilder.createLight(token);
 
+        // If there is a role id for onJoin then it will enable role on join functionality
         if(instance.config.getRoleOnJoin() != 0) {
             jdaBuilder.enableIntents(GatewayIntent.GUILD_MEMBERS);
             jdaBuilder.addEventListeners(new MemberJoinListener());
         }
 
+        // If there is a prefix then allow command functionality
         boolean hasPrefix = !instance.config.getPrefix().isEmpty();
 
         if(hasPrefix) {
@@ -68,6 +72,7 @@ public class PhaseStaff {
             jdaBuilder.addEventListeners(new CommandsListener());
         }
 
+        // If there is an id for the time channel then enable time channel functionality
         if(instance.config.getChannelTime() != 0) {
             instance.time = new Time();
 
@@ -80,21 +85,27 @@ public class PhaseStaff {
 
         }
 
-        jdaBuilder.addEventListeners(new ReadyListener());
+        // If there is an id for vc role then enable role on vc join functionality
         if(instance.config.getVcRoleId() != 0) {
+            jdaBuilder.enableIntents(GatewayIntent.GUILD_VOICE_STATES);
+            jdaBuilder.enableCache(CacheFlag.VOICE_STATE);
+            jdaBuilder.enableIntents(GatewayIntent.GUILD_MEMBERS);
+
             jdaBuilder.addEventListeners(new MemberVcListener());
         }
 
+        jdaBuilder.addEventListeners(new ReadyListener());
+
+        if(!instance.config.getActivityName().isBlank() && !instance.config.getActivityType().name().isBlank()) {
+            jdaBuilder.setActivity(Activity.of(instance.config.getActivityType(), instance.config.getActivityName()));
+        }
+
         instance.jda = jdaBuilder
-                .setActivity(Activity.of(instance.config.getActivityType(), instance.config.getActivityName()))
                 .setChunkingFilter(ChunkingFilter.ALL)
                 .build();
 
         if(hasPrefix) {
-            instance.commands.addAll(Arrays.asList(
-                    new TimeZoneCommand(),
-                    new UserInfoCommand()
-            ));
+            CommandHandler.addCommands(new TimeZoneCommand(), new UserInfoCommand());
         }
 
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
@@ -106,20 +117,18 @@ public class PhaseStaff {
 
             switch(command[0]) {
                 case "listGuilds":
-                    instance.logger.info(instance.jda.getGuilds());
+                    logger.info(instance.jda.getGuilds());
                     break;
                 case "leaveGuild":
                     Objects.requireNonNull(instance.jda.getGuildById(command[1])).leave().queue(success ->
-                            instance.logger.info("Bot has successfully left the guild with the id of " + command[1]));
+                            logger.info("Bot has successfully left the guild with the id of " + command[1]));
                     break;
             }
 
             System.out.print("Enter Command: ");
         }
 
-        instance.jda.shutdown();
-
-        System.exit(0);
+        shutdown(0);
     }
 
     public static PhaseStaff getInstance() {
@@ -130,26 +139,20 @@ public class PhaseStaff {
         return config;
     }
 
-    public Logger getLogger() {
-        return logger;
-    }
-
     public Time getTime() { return time; }
 
     public JDA getJDA() {
         return jda;
     }
 
-    public List<Command> getCommands() {
-        return commands;
-    }
-
-    public void setCommandsList(List<Command> commands) {
-        this.commands = commands;
-    }
-
     public static EmbedBuilder getTemplate(User author) {
         return new EmbedBuilder()
                 .setFooter("Faster | " + MessageUtils.nameAndTag(author));
+    }
+
+    public static void shutdown(int errorCode) {
+        instance.jda.shutdown();
+
+        System.exit(errorCode);
     }
 }
