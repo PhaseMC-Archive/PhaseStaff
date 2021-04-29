@@ -4,6 +4,7 @@ import com.google.gson.JsonElement;
 import me.jordanplayz158.phasestaff.PhaseStaff;
 import me.jordanplayz158.phasestaff.events.ReadyListener;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.Member;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 
@@ -19,11 +20,14 @@ public class TimeZoneMessageJob implements Job {
         final String pattern = "hh:mm a";
         PhaseStaff.getInstance().getTime().getStaffMembers().forEach(staff -> {
             for (Map.Entry<String, JsonElement> map : staff.getAsJsonObject().entrySet()) {
-                stringBuilder
-                        .append(ReadyListener.getGuild().getMemberById(map.getKey()).getEffectiveName())
-                        .append(" ")
-                        .append(LocalTime.now(ZoneId.of(map.getValue().getAsString())).format(DateTimeFormatter.ofPattern(pattern)))
-                        .append("\n");
+                Member member;
+                if((member = ReadyListener.getGuild().getMemberById(map.getKey())) != null) {
+                    stringBuilder
+                            .append(member.getEffectiveName())
+                            .append(" ")
+                            .append(LocalTime.now(ZoneId.of(map.getValue().getAsString())).format(DateTimeFormatter.ofPattern(pattern)))
+                            .append("\n");
+                }
             }
         });
 
