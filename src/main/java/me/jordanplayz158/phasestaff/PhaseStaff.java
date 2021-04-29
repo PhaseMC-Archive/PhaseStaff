@@ -2,6 +2,7 @@ package me.jordanplayz158.phasestaff;
 
 import me.jordanplayz158.phasestaff.commands.Command;
 import me.jordanplayz158.phasestaff.commands.TimeZoneCommand;
+import me.jordanplayz158.phasestaff.commands.UserInfoCommand;
 import me.jordanplayz158.phasestaff.events.CommandsListener;
 import me.jordanplayz158.phasestaff.events.MemberJoinListener;
 import me.jordanplayz158.phasestaff.events.ReadyListener;
@@ -86,7 +87,8 @@ public class PhaseStaff {
 
         if(hasPrefix) {
             instance.commands.addAll(Arrays.asList(
-                    new TimeZoneCommand()
+                    new TimeZoneCommand(),
+                    new UserInfoCommand()
             ));
         }
 
@@ -144,7 +146,7 @@ public class PhaseStaff {
         this.commands = commands;
     }
 
-    public EmbedBuilder getTemplate(User author) {
+    public static EmbedBuilder getTemplate(User author) {
         return new EmbedBuilder()
                 .setFooter("Faster | " + MessageUtils.nameAndTag(author));
     }
